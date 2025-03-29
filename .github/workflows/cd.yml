@@ -40,11 +40,6 @@ jobs:
       - name: Build package
         run: yarn build
 
-      - name: Git configuration
-        run: |
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "GitHub Actions"
-          
       - name: Check if release is needed
         id: check_release
         run: |
@@ -71,21 +66,6 @@ jobs:
         if: env.RELEASE_NEEDED == 'true'
         run: |
           yarn release
-          
-      - name: Get version
-        if: env.RELEASE_NEEDED == 'true'
-        id: get_version
-        run: |
-          echo "$(node scripts/get-version.js)" >> $GITHUB_ENV
-          
-      - name: Commit version bump
-        if: env.RELEASE_NEEDED == 'true'
-        run: |
-          git add .
-          git commit -m "chore(release): Bump version to v${{ env.PACKAGE_VERSION }}"
-          git push origin main
-          git tag v${{ env.PACKAGE_VERSION }}
-          git push origin v${{ env.PACKAGE_VERSION }}
           
       - name: Publish to NPM
         if: env.RELEASE_NEEDED == 'true'
