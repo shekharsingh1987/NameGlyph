@@ -18,18 +18,11 @@ jobs:
     permissions:
       contents: write
       packages: write
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-          ref: main
-          
-      - name: Fetch all history and tags
-        run: |
-          git fetch --prune --unshallow
-          git fetch --tags
           
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -66,14 +59,6 @@ jobs:
             COMMITS_TO_CHECK=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s")
           fi
           
-          # Skip if the latest commit is a release commit
-          LATEST_COMMIT_MSG=$(git log -1 --pretty=format:"%s")
-          if echo "$LATEST_COMMIT_MSG" | grep -q "^chore(release)"; then
-            echo "Skipping: Latest commit is a release commit"
-            echo "RELEASE_NEEDED=false" >> $GITHUB_ENV
-            exit 0
-          fi
-          
           if echo "$COMMITS_TO_CHECK" | grep -E "^(feat|fix|breaking):" > /dev/null; then
             echo "RELEASE_NEEDED=true" >> $GITHUB_ENV
             echo "Found commits requiring release"
@@ -82,28 +67,7 @@ jobs:
             echo "No commits requiring release"
           fi
           
-      - name: Generate Release Notes
-        if: env.RELEASE_NEEDED == 'true'
-        run: |
-          # Install conventional-changelog-cli
-          yarn add -D conventional-changelog-cli
-          
-          # For first release, generate complete changelog
-          if [ ! -f CHANGELOG.md ]; then
-            npx conventional-changelog -p angular -i CHANGELOG.md -s -r 0
-          else
-            # For subsequent releases, prepend new changes
-            npx conventional-changelog -p angular -i CHANGELOG.md -s
-          fi
-          
-          # Generate current version's release notes
-          npx conventional-changelog -p angular -r 1 > RELEASE_NOTES.md
-          
-          # Update package.json changelog field
-          RELEASE_NOTES=$(cat RELEASE_NOTES.md)
-          npm pkg set changelog="$RELEASE_NOTES"
-          
-      - name: Bump version and update files
+      - name: Bump version
         if: env.RELEASE_NEEDED == 'true'
         run: |
           yarn release
@@ -114,50 +78,14 @@ jobs:
         run: |
           echo "$(node scripts/get-version.js)" >> $GITHUB_ENV
           
-      - name: Create and merge release PR
+      - name: Commit version bump
         if: env.RELEASE_NEEDED == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Ensure we're on main and up to date
-          git checkout main
-          git pull origin main
-          
-          # Create a new branch for the release
-          RELEASE_BRANCH="release/v${{ env.PACKAGE_VERSION }}"
-          git checkout -b $RELEASE_BRANCH
-          
-          # Stage and commit all changes
           git add .
-          git commit -m "chore(release): Prepare release v${{ env.PACKAGE_VERSION }}"
-          
-          # Force push the release branch (in case it exists)
-          git push -f origin $RELEASE_BRANCH
-          
-          # Create PR using GitHub CLI
-          PR_URL=$(gh pr create \
-            --title "chore(release): Prepare release v${{ env.PACKAGE_VERSION }}" \
-            --body "$(cat RELEASE_NOTES.md)" \
-            --base main \
-            --head $RELEASE_BRANCH \
-            --label release \
-            --label automated)
-          
-          echo "Created PR: $PR_URL"
-          
-          # Wait for checks to complete
-          gh pr checks $PR_URL --watch
-          
-          # If all checks pass, merge the PR
-          gh pr merge $PR_URL --admin --merge --delete-branch
-          
-      - name: Create GitHub Release
-        if: env.RELEASE_NEEDED == 'true'
-        uses: softprops/action-gh-release@v1
-        with:
-          body_path: RELEASE_NOTES.md
-          tag_name: v${{ env.PACKAGE_VERSION }}
-          generate_release_notes: false
+          git commit -m "chore(release): Bump version to v${{ env.PACKAGE_VERSION }}"
+          git push origin main
+          git tag v${{ env.PACKAGE_VERSION }}
+          git push origin v${{ env.PACKAGE_VERSION }}
           
       - name: Publish to NPM
         if: env.RELEASE_NEEDED == 'true'
