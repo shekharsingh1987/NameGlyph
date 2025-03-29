@@ -42,8 +42,7 @@ const glyph = generateGlyph('John Doe');
 
 ## API Reference
 
-### `generateGlyph(text: string): string`
-
+### `generateNameGlyph(text: string): string`
 Creates a new glyph from the input text and returns it as an HTML string.
 
 ## Examples
