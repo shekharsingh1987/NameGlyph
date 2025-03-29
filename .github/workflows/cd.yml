@@ -15,6 +15,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -96,10 +97,38 @@ jobs:
         run: |
           echo "$(node scripts/get-version.js)" >> $GITHUB_ENV
           
-      - name: Push changes
+      - name: Create and merge release PR
         if: env.RELEASE_NEEDED == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git push --follow-tags origin main
+          # Create a new branch for the release
+          RELEASE_BRANCH="release/v${{ env.PACKAGE_VERSION }}"
+          git checkout -b $RELEASE_BRANCH
+          
+          # Stage and commit all changes
+          git add .
+          git commit -m "chore(release): Prepare release v${{ env.PACKAGE_VERSION }}"
+          
+          # Push the release branch
+          git push origin $RELEASE_BRANCH
+          
+          # Create PR using GitHub CLI
+          PR_URL=$(gh pr create \
+            --title "chore(release): Prepare release v${{ env.PACKAGE_VERSION }}" \
+            --body "$(cat RELEASE_NOTES.md)" \
+            --base main \
+            --head $RELEASE_BRANCH \
+            --label release \
+            --label automated)
+          
+          echo "Created PR: $PR_URL"
+          
+          # Wait for checks to complete
+          gh pr checks $PR_URL --watch
+          
+          # If all checks pass, merge the PR
+          gh pr merge $PR_URL --admin --merge --delete-branch
           
       - name: Create GitHub Release
         if: env.RELEASE_NEEDED == 'true'
