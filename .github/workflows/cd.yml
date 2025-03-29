@@ -45,22 +45,40 @@ jobs:
       - name: Check if release is needed
         id: check_release
         run: |
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          COMMITS_SINCE_TAG=$(git log $LAST_TAG..HEAD --pretty=format:"%s" | grep -E "^(feat|fix|breaking):" || true)
-          if [ ! -z "$COMMITS_SINCE_TAG" ]; then
+          # Try to get the last tag, if it fails, consider it's the first release
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$LAST_TAG" ]; then
+            echo "First release - checking all commits"
+            COMMITS_TO_CHECK=$(git log --pretty=format:"%s")
+          else
+            echo "Checking commits since $LAST_TAG"
+            COMMITS_TO_CHECK=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s")
+          fi
+          
+          if echo "$COMMITS_TO_CHECK" | grep -E "^(feat|fix|breaking):" > /dev/null; then
             echo "RELEASE_NEEDED=true" >> $GITHUB_ENV
+            echo "Found commits requiring release"
           else
             echo "RELEASE_NEEDED=false" >> $GITHUB_ENV
+            echo "No commits requiring release"
           fi
           
       - name: Generate Release Notes
         if: env.RELEASE_NEEDED == 'true'
         run: |
-          # Generate the full changelog
+          # Install conventional-changelog-cli
           yarn add -D conventional-changelog-cli
-          npx conventional-changelog -p angular -i CHANGELOG.md -s -r 0
           
-          # Generate the current version's release notes
+          # For first release, generate complete changelog
+          if [ ! -f CHANGELOG.md ]; then
+            npx conventional-changelog -p angular -i CHANGELOG.md -s -r 0
+          else
+            # For subsequent releases, prepend new changes
+            npx conventional-changelog -p angular -i CHANGELOG.md -s
+          fi
+          
+          # Generate current version's release notes
           npx conventional-changelog -p angular -r 1 > RELEASE_NOTES.md
           
           # Update package.json changelog field

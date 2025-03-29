@@ -34,15 +34,15 @@ pnpm add name-glyph
 ## Quick Start
 
 ```typescript
-import { generateGlyph } from 'name-glyph';
+import { generateNameGlyph } from 'name-glyph';
 
 // Generate a glyph
-const glyph = generateGlyph('John Doe');
+const glyph = generateNameGlyph('John Doe');
 ```
 
 ## API Reference
 
-### `generateGlyph(text: string): string`
+### `generateNameGlyph(text: string): string`
 
 Creates a new glyph from the input text and returns it as an HTML string.
 
@@ -52,14 +52,14 @@ Creates a new glyph from the input text and returns it as an HTML string.
 
 ```typescript
 import React from 'react';
-import { generateGlyph } from 'name-glyph';
+import { generateNameGlyph } from 'name-glyph';
 
 interface AvatarProps {
   name: string;
 }
 
 export const Avatar: React.FC<AvatarProps> = ({ name }) => {
-  const glyphHtml = generateGlyph(name);
+  const glyphHtml = generateNameGlyph(name);
 
   return (
     <div
@@ -79,14 +79,14 @@ export const Avatar: React.FC<AvatarProps> = ({ name }) => {
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { generateGlyph } from 'name-glyph';
+import { generateNameGlyph } from 'name-glyph';
 
 const props = defineProps<{
   name: string;
 }>();
 
 const glyphHtml = computed(() => {
-  return generateGlyph(props.name);
+  return generateNameGlyph(props.name);
 });
 </script>
 ```
