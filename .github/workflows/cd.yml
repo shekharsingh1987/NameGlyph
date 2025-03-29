@@ -5,7 +5,7 @@ on:
     workflows: ["CI"]
     types:
       - completed
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   release:
@@ -23,20 +23,20 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
-          cache: 'yarn'
-          registry-url: 'https://registry.npmjs.org'
-          
+          node-version: "20.x"
+          cache: "yarn"
+          registry-url: "https://registry.npmjs.org"
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
-        
+
       - name: Run tests
         run: yarn test
-        
+
       - name: Build package
         run: yarn build
 
@@ -45,7 +45,7 @@ jobs:
         run: |
           # Try to get the last tag, if it fails, consider it's the first release
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          
+
           if [ -z "$LAST_TAG" ]; then
             echo "First release - checking all commits"
             COMMITS_TO_CHECK=$(git log --pretty=format:"%s")
@@ -53,7 +53,7 @@ jobs:
             echo "Checking commits since $LAST_TAG"
             COMMITS_TO_CHECK=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s")
           fi
-          
+
           if echo "$COMMITS_TO_CHECK" | grep -E "^(feat|fix|breaking):" > /dev/null; then
             echo "RELEASE_NEEDED=true" >> $GITHUB_ENV
             echo "Found commits requiring release"
@@ -61,14 +61,18 @@ jobs:
             echo "RELEASE_NEEDED=false" >> $GITHUB_ENV
             echo "No commits requiring release"
           fi
-          
+      - name: Configure Git user
+        if: env.RELEASE_NEEDED == 'true'
+        run: |
+          git config --global user.email ${{ secrets.EMAIL }}
+          git config --global user.name ${{ secrets.GIT_USER_NAME}}
       - name: Bump version
         if: env.RELEASE_NEEDED == 'true'
         run: |
           yarn release
-          
+
       - name: Publish to NPM
         if: env.RELEASE_NEEDED == 'true'
         run: yarn publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} 
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

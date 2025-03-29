@@ -14,7 +14,7 @@
     "format": "prettier --write src/**/*.ts",
     "prepare": "husky",
     "pre-commit": "lint-staged",
-    "commit": "git-cz",
+    "commit": "commitlint --edit",
     "release": "standard-version"
   },
   "lint-staged": {
