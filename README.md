@@ -34,10 +34,10 @@ pnpm add name-glyph
 ## Quick Start
 
 ```typescript
-import { generateGlyph } from 'name-glyph';
+import { generateNameGlyph } from 'name-glyph';
 
 // Generate a glyph
-const glyph = generateGlyph('John Doe');
+const glyph = generateNameGlyph('John Doe');
 ```
 
 ## API Reference
