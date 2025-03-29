@@ -23,7 +23,13 @@ export default {
       ],
     ],
     'scope-case': [2, 'always', 'kebab-case'],
-    'subject-case': [2, 'always', 'sentence-case'],
+    'subject-case': [
+      2,
+      'never',
+      ['sentence-case', 'upper-case',
+        'pascal-case',
+        'start-case',]
+    ],
     'body-max-line-length': [2, 'always', 100],
   },
 }; 
