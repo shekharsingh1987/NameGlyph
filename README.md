@@ -1,14 +1,9 @@
 # NameGlyph
 
-[![CI](https://github.com/shekhar/NameGlyph/actions/workflows/ci.yml/badge.svg)](https://github.com/shekhar/NameGlyph/actions/workflows/ci.yml)
 [![npm version](https://badge.fury.io/js/name-glyph.svg)](https://www.npmjs.com/package/name-glyph)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Generate beautiful, unique glyphs from names - perfect for user avatars, brand identities, and visual representations of text.
-
-<div align="center">
-  <img src="docs/example.png" alt="NameGlyph Examples" width="600"/>
-</div>
 
 ## Features
 
