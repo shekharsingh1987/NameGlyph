@@ -71,6 +71,12 @@ jobs:
         run: |
           yarn release
 
+      - name: Push changes and tags
+        if: env.RELEASE_NEEDED == 'true'
+        run: |
+          git push --follow-tags origin main
+          git push --tags
+
       - name: Publish to NPM
         if: env.RELEASE_NEEDED == 'true'
         run: yarn publish
